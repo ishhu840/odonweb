@@ -36,12 +36,33 @@ const Navigation = ({ pages, isAdmin, user, onLogin, onLogout, onOpenAdminPanel 
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-6 h-6 text-white animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  {/* Molecular Structure Icon */}
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <g>
+                      {/* Central molecule */}
+                      <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                      {/* Surrounding molecules */}
+                      <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
+                      <circle cx="16" cy="8" r="1.5" fill="currentColor"/>
+                      <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
+                      <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
+                      <circle cx="4" cy="12" r="1.5" fill="currentColor"/>
+                      <circle cx="20" cy="12" r="1.5" fill="currentColor"/>
+                      <circle cx="12" cy="4" r="1.5" fill="currentColor"/>
+                      <circle cx="12" cy="20" r="1.5" fill="currentColor"/>
+                      {/* Bonds */}
+                      <line x1="12" y1="12" x2="8" y2="8" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="16" y2="8" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="8" y2="16" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="16" y2="16" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="4" y2="12" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="12" y2="4" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="12" y2="20" stroke="currentColor" strokeWidth="1"/>
+                    </g>
                   </svg>
                 </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full animate-ping"></div>
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white group-hover:text-blue-400 transition-colors">
