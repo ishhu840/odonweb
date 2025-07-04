@@ -447,17 +447,17 @@ const HomePage = ({ page, projects, isAdmin, onEditPage, onEditProject, onDelete
 
 // Projects Page Component
 const ProjectsPage = ({ page, projects, isAdmin, onEditPage, onEditProject, onDeleteProject, onAddProject }) => {
-  if (!page) return <PageLayout><div className="flex items-center justify-center min-h-screen"><div className="text-white text-xl">Page not found</div></div></PageLayout>;
+  if (!page) return <PageLayout><div className="flex items-center justify-center min-h-screen"><div className="text-slate-800 text-xl">Page not found</div></div></PageLayout>;
 
   return (
     <PageLayout>
       <section className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-6">
               {page.title}
             </h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl text-slate-700 max-w-3xl mx-auto">
               {page.subtitle}
             </p>
             {isAdmin && (
@@ -480,16 +480,16 @@ const ProjectsPage = ({ page, projects, isAdmin, onEditPage, onEditProject, onDe
 
           <div className="grid gap-8 max-w-6xl mx-auto">
             {projects.filter(p => p.is_published).map((project, index) => (
-              <div key={project.id} className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:transform hover:scale-105">
+              <div key={project.id} className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 border border-blue-300/30 hover:border-blue-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-6 flex-1">
                     <div className="text-4xl">{project.icon}</div>
                     <div className="flex-1">
-                      <h3 className="text-2xl font-bold text-white mb-4">{project.title}</h3>
-                      <p className="text-blue-100 mb-4 leading-relaxed">{project.description}</p>
-                      <div className="bg-blue-500/20 rounded-lg p-4 border border-blue-500/30">
-                        <strong className="text-white">Key Areas:</strong>
-                        <span className="text-blue-100 ml-2">{project.key_areas}</span>
+                      <h3 className="text-2xl font-bold text-slate-800 mb-4">{project.title}</h3>
+                      <p className="text-slate-700 mb-4 leading-relaxed">{project.description}</p>
+                      <div className="bg-blue-50/80 rounded-lg p-4 border border-blue-300/40">
+                        <strong className="text-slate-800">Key Areas:</strong>
+                        <span className="text-slate-700 ml-2">{project.key_areas}</span>
                       </div>
                     </div>
                   </div>
@@ -517,18 +517,18 @@ const ProjectsPage = ({ page, projects, isAdmin, onEditPage, onEditProject, onDe
           {projects.filter(p => p.is_published).length === 0 && (
             <div className="text-center py-20">
               <div className="text-6xl mb-4">🔬</div>
-              <h3 className="text-2xl font-bold text-white mb-4">No Projects Available</h3>
-              <p className="text-blue-100">Projects will be displayed here once they are published.</p>
+              <h3 className="text-2xl font-bold text-slate-800 mb-4">No Projects Available</h3>
+              <p className="text-slate-700">Projects will be displayed here once they are published.</p>
             </div>
           )}
 
           <div className="mt-12 text-center">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20 max-w-4xl mx-auto">
-              <h3 className="text-2xl font-bold text-white mb-4">
+            <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 border border-blue-300/30 max-w-4xl mx-auto shadow-lg">
+              <h3 className="text-2xl font-bold text-slate-800 mb-4">
                 <span className="text-3xl mr-3">🤝</span>
                 Collaborations
               </h3>
-              <p className="text-blue-100 leading-relaxed">
+              <p className="text-slate-700 leading-relaxed">
                 {page.content?.collaborations_text || 'We actively collaborate with leading research institutions, pharmaceutical companies, and healthcare organizations worldwide to advance our research goals and translate discoveries into clinical applications.'}
               </p>
             </div>
