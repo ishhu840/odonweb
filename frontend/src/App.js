@@ -1334,7 +1334,7 @@ const App = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             {/* Molecular Structure Icon */}
@@ -1363,7 +1363,7 @@ const App = () => {
               </g>
             </svg>
           </div>
-          <p className="text-white text-xl">Loading Odon Lab...</p>
+          <p className="text-slate-800 text-xl">Loading Odon Lab...</p>
         </div>
       </div>
     );
