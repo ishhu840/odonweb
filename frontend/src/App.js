@@ -247,9 +247,31 @@ const PageLayout = ({ children, className = "" }) => (
       <div className="container mx-auto px-6">
         <div className="text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+              {/* Molecular Structure Icon */}
               <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                <g>
+                  {/* Central molecule */}
+                  <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                  {/* Surrounding molecules */}
+                  <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
+                  <circle cx="16" cy="8" r="1.5" fill="currentColor"/>
+                  <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
+                  <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
+                  <circle cx="4" cy="12" r="1.5" fill="currentColor"/>
+                  <circle cx="20" cy="12" r="1.5" fill="currentColor"/>
+                  <circle cx="12" cy="4" r="1.5" fill="currentColor"/>
+                  <circle cx="12" cy="20" r="1.5" fill="currentColor"/>
+                  {/* Bonds */}
+                  <line x1="12" y1="12" x2="8" y2="8" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="12" y1="12" x2="16" y2="8" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="12" y1="12" x2="8" y2="16" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="12" y1="12" x2="16" y2="16" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="12" y1="12" x2="4" y2="12" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="12" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="12" y1="12" x2="12" y2="4" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="12" y1="12" x2="12" y2="20" stroke="currentColor" strokeWidth="1"/>
+                </g>
               </svg>
             </div>
             <span className="text-xl font-bold text-white">Odon Lab</span>
