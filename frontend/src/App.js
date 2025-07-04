@@ -1,9 +1,108 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './App.css';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const App = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [token, setToken] = useState(localStorage.getItem('token') || '');
+  const [user, setUser] = useState(null);
+  
+  // Content states
+  const [pages, setPages] = useState({});
+  const [projects, setProjects] = useState([]);
+  const [settings, setSettings] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  // Login form state
+  const [loginForm, setLoginForm] = useState({
+    username: '',
+    password: ''
+  });
+
+  // Admin editing states
+  const [editingPage, setEditingPage] = useState(null);
+  const [editingProject, setEditingProject] = useState(null);
+  const [editingSettings, setEditingSettings] = useState(false);
+
+  // Load content from backend
+  useEffect(() => {
+    loadContent();
+    if (token) {
+      verifyToken();
+    }
+  }, [token]);
+
+  const loadContent = async () => {
+    try {
+      setLoading(true);
+      
+      // Load pages
+      const pagesResponse = await axios.get(`${API}/pages`);
+      const pagesData = {};
+      pagesResponse.data.forEach(page => {
+        pagesData[page.page_name] = page;
+      });
+      setPages(pagesData);
+
+      // Load projects
+      const projectsResponse = await axios.get(`${API}/projects`);
+      setProjects(projectsResponse.data);
+
+      // Load settings
+      const settingsResponse = await axios.get(`${API}/settings`);
+      setSettings(settingsResponse.data);
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading content:', error);
+      setLoading(false);
+    }
+  };
+
+  const verifyToken = async () => {
+    try {
+      const response = await axios.get(`${API}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser(response.data);
+      setIsAdmin(response.data.is_admin);
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      setToken('');
+      localStorage.removeItem('token');
+      setUser(null);
+      setIsAdmin(false);
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(`${API}/auth/login`, loginForm);
+      const newToken = response.data.access_token;
+      setToken(newToken);
+      localStorage.setItem('token', newToken);
+      setIsLoginOpen(false);
+      setLoginForm({ username: '', password: '' });
+    } catch (error) {
+      alert('Login failed. Please check your credentials.');
+    }
+  };
+
+  const handleLogout = () => {
+    setToken('');
+    localStorage.removeItem('token');
+    setUser(null);
+    setIsAdmin(false);
+    setIsAdminPanelOpen(false);
+  };
 
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId);
@@ -11,6 +110,58 @@ const App = () => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const updatePage = async (pageName, updatedContent) => {
+    try {
+      await axios.put(`${API}/pages/${pageName}`, updatedContent, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await loadContent();
+      setEditingPage(null);
+    } catch (error) {
+      console.error('Error updating page:', error);
+      alert('Failed to update page');
+    }
+  };
+
+  const updateProject = async (projectId, updatedProject) => {
+    try {
+      await axios.put(`${API}/projects/${projectId}`, updatedProject, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await loadContent();
+      setEditingProject(null);
+    } catch (error) {
+      console.error('Error updating project:', error);
+      alert('Failed to update project');
+    }
+  };
+
+  const deleteProject = async (projectId) => {
+    if (window.confirm('Are you sure you want to delete this project?')) {
+      try {
+        await axios.delete(`${API}/projects/${projectId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        await loadContent();
+      } catch (error) {
+        console.error('Error deleting project:', error);
+        alert('Failed to delete project');
+      }
+    }
+  };
+
+  const addProject = async (newProject) => {
+    try {
+      await axios.post(`${API}/projects`, newProject, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await loadContent();
+    } catch (error) {
+      console.error('Error adding project:', error);
+      alert('Failed to add project');
     }
   };
 
@@ -37,6 +188,21 @@ const App = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <p className="text-white text-xl">Loading Odon Lab...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       {/* Header */}
@@ -57,7 +223,7 @@ const App = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white group-hover:text-blue-400 transition-colors">
-                  Odon Lab
+                  {settings.site_name || 'Odon Lab'}
                 </h1>
                 <p className="text-xs text-blue-300">Virology Research</p>
               </div>
@@ -83,6 +249,31 @@ const App = () => {
                   {item.label}
                 </button>
               ))}
+              
+              {/* Admin Button */}
+              {isAdmin ? (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setIsAdminPanelOpen(true)}
+                    className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors"
+                  >
+                    Admin Panel
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsLoginOpen(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                >
+                  Admin Login
+                </button>
+              )}
             </nav>
 
             {/* Mobile Menu Button */}
@@ -122,6 +313,30 @@ const App = () => {
                     {item.label}
                   </button>
                 ))}
+                
+                {isAdmin ? (
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setIsAdminPanelOpen(true)}
+                      className="block w-full text-left px-4 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors"
+                    >
+                      Admin Panel
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsLoginOpen(true)}
+                    className="block w-full text-left px-4 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                  >
+                    Admin Login
+                  </button>
+                )}
               </nav>
             </div>
           )}
@@ -134,7 +349,7 @@ const App = () => {
         <section id="home" className="min-h-screen flex items-center relative overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img 
-              src="https://images.pexels.com/photos/8532850/pexels-photo-8532850.jpeg" 
+              src={pages.home?.content?.hero_image || "https://images.pexels.com/photos/8532850/pexels-photo-8532850.jpeg"} 
               alt="Laboratory Research"
               className="w-full h-full object-cover opacity-30"
             />
@@ -145,14 +360,22 @@ const App = () => {
             <div className="max-w-4xl mx-auto text-center">
               <div className="mb-8">
                 <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-                  Welcome to 
+                  {pages.home?.content?.hero_title?.split(' ').slice(0, 2).join(' ') || 'Welcome to'} 
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 block">
-                    Odon Lab
+                    {pages.home?.content?.hero_title?.split(' ').slice(2).join(' ') || 'Odon Lab'}
                   </span>
                 </h1>
                 <p className="text-xl md:text-2xl text-blue-100 mb-8 leading-relaxed">
-                  Advancing virology and immunology research at the University of Strathclyde under the leadership of Dr. Valerie Odon
+                  {pages.home?.content?.hero_subtitle || 'Advancing virology and immunology research at the University of Strathclyde under the leadership of Dr. Valerie Odon'}
                 </p>
+                {isAdmin && (
+                  <button
+                    onClick={() => setEditingPage('home')}
+                    className="mb-6 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                  >
+                    Edit Home Page
+                  </button>
+                )}
               </div>
 
               <div className="grid md:grid-cols-2 gap-8 mb-12">
@@ -185,32 +408,24 @@ const App = () => {
                 <h2 className="text-3xl font-bold text-white mb-6">About Dr. Valerie Odon</h2>
                 <div className="text-left max-w-4xl mx-auto">
                   <p className="text-blue-100 text-lg leading-relaxed mb-6">
-                    <strong className="text-white">Dr. Valerie Odon</strong> is a distinguished virologist and lecturer in Immunology at the Strathclyde Institute of Pharmacy and Biomedical Sciences, University of Strathclyde. With extensive expertise in viral immunology, she leads groundbreaking research initiatives that bridge fundamental virology with clinical applications.
+                    {pages.home?.content?.about_dr_odon || 'Dr. Valerie Odon is a distinguished virologist and lecturer in Immunology at the Strathclyde Institute of Pharmacy and Biomedical Sciences, University of Strathclyde. With extensive expertise in viral immunology, she leads groundbreaking research initiatives that bridge fundamental virology with clinical applications.'}
                   </p>
                   <div className="grid md:grid-cols-2 gap-8">
                     <div>
                       <h4 className="text-xl font-semibold text-white mb-4">Research Interests:</h4>
                       <ul className="space-y-2 text-blue-100">
-                        <li className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
-                          Virus-host cell interactions
-                        </li>
-                        <li className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
-                          Innate and adaptive immune responses
-                        </li>
-                        <li className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
-                          Viral pathogenesis mechanisms
-                        </li>
-                        <li className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
-                          Antiviral therapeutics development
-                        </li>
-                        <li className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
-                          Vaccine development and immunology
-                        </li>
+                        {(pages.home?.content?.research_interests || [
+                          'Virus-host cell interactions',
+                          'Innate and adaptive immune responses',
+                          'Viral pathogenesis mechanisms',
+                          'Antiviral therapeutics development',
+                          'Vaccine development and immunology'
+                        ]).map((interest, index) => (
+                          <li key={index} className="flex items-center">
+                            <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
+                            {interest}
+                          </li>
+                        ))}
                       </ul>
                     </div>
                     <div>
@@ -238,46 +453,47 @@ const App = () => {
               <p className="text-xl text-blue-100 max-w-3xl mx-auto">
                 Exploring the frontiers of virology and immunology through innovative research initiatives
               </p>
+              {isAdmin && (
+                <button
+                  onClick={() => setEditingProject('new')}
+                  className="mt-6 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                >
+                  Add New Project
+                </button>
+              )}
             </div>
 
             <div className="grid gap-8 max-w-6xl mx-auto">
-              {[
-                {
-                  title: "Viral Pathogenesis Studies",
-                  description: "Investigating the molecular mechanisms underlying viral infection and disease progression. Our research focuses on understanding how viruses interact with host cells and evade immune responses.",
-                  keyAreas: "Viral entry mechanisms, replication strategies, immune evasion, and pathogenesis pathways.",
-                  icon: "🧬"
-                },
-                {
-                  title: "Antiviral Drug Development",
-                  description: "Developing novel therapeutic approaches to combat viral infections. We utilize cutting-edge techniques to identify and characterize potential antiviral compounds.",
-                  keyAreas: "Small molecule inhibitors, immunomodulatory agents, and combination therapies.",
-                  icon: "🛡️"
-                },
-                {
-                  title: "Vaccine Immunology",
-                  description: "Studying immune responses to vaccines and developing improved vaccination strategies. Our work contributes to understanding vaccine efficacy and safety.",
-                  keyAreas: "Adjuvant development, immune memory formation, and vaccine delivery systems.",
-                  icon: "💉"
-                },
-                {
-                  title: "Host-Pathogen Interactions",
-                  description: "Examining the complex interplay between viruses and their hosts at the cellular and molecular level. This research informs our understanding of disease susceptibility and resistance mechanisms.",
-                  keyAreas: "Advanced microscopy, proteomics, genomics, and systems biology approaches.",
-                  icon: "🔬"
-                }
-              ].map((project, index) => (
-                <div key={index} className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:transform hover:scale-105">
-                  <div className="flex items-start space-x-6">
-                    <div className="text-4xl">{project.icon}</div>
-                    <div className="flex-1">
-                      <h3 className="text-2xl font-bold text-white mb-4">{project.title}</h3>
-                      <p className="text-blue-100 mb-4 leading-relaxed">{project.description}</p>
-                      <div className="bg-blue-500/20 rounded-lg p-4 border border-blue-500/30">
-                        <strong className="text-white">Key Areas:</strong>
-                        <span className="text-blue-100 ml-2">{project.keyAreas}</span>
+              {projects.filter(p => p.is_published).map((project, index) => (
+                <div key={project.id} className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:transform hover:scale-105">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-6 flex-1">
+                      <div className="text-4xl">{project.icon}</div>
+                      <div className="flex-1">
+                        <h3 className="text-2xl font-bold text-white mb-4">{project.title}</h3>
+                        <p className="text-blue-100 mb-4 leading-relaxed">{project.description}</p>
+                        <div className="bg-blue-500/20 rounded-lg p-4 border border-blue-500/30">
+                          <strong className="text-white">Key Areas:</strong>
+                          <span className="text-blue-100 ml-2">{project.key_areas}</span>
+                        </div>
                       </div>
                     </div>
+                    {isAdmin && (
+                      <div className="flex flex-col space-y-2 ml-4">
+                        <button
+                          onClick={() => setEditingProject(project.id)}
+                          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteProject(project.id)}
+                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -301,7 +517,7 @@ const App = () => {
         <section id="odonai" className="py-20 relative overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img 
-              src="https://images.unsplash.com/photo-1655393001768-d946c97d6fd1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzd8MHwxfHNlYXJjaHwxfHxBSSUyMHRlY2hub2xvZ3l8ZW58MHx8fGJsdWV8MTc1MTYyMjk0NHww&ixlib=rb-4.1.0&q=85" 
+              src={pages.odonai?.content?.ai_image || "https://images.unsplash.com/photo-1655393001768-d946c97d6fd1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzd8MHwxfHNlYXJjaHwxfHxBSSUyMHRlY2hub2xvZ3l8ZW58MHx8fGJsdWV8MTc1MTYyMjk0NHww&ixlib=rb-4.1.0&q=85"} 
               alt="AI Technology"
               className="w-full h-full object-cover opacity-20"
             />
@@ -314,8 +530,16 @@ const App = () => {
                 Odon<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">AI</span>
               </h2>
               <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-                Artificial Intelligence Applications in Virology and Immunology Research
+                {pages.odonai?.content?.subtitle || 'Artificial Intelligence Applications in Virology and Immunology Research'}
               </p>
+              {isAdmin && (
+                <button
+                  onClick={() => setEditingPage('odonai')}
+                  className="mt-6 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                >
+                  Edit OdonAI Page
+                </button>
+              )}
             </div>
 
             <div className="max-w-6xl mx-auto">
@@ -329,7 +553,7 @@ const App = () => {
                   <h3 className="text-3xl font-bold text-white mb-4">AI-Powered Research</h3>
                 </div>
                 <p className="text-blue-100 text-lg leading-relaxed text-center">
-                  OdonAI represents our commitment to integrating artificial intelligence and machine learning technologies into virology and immunology research. We leverage computational approaches to accelerate discovery and enhance our understanding of complex biological systems.
+                  {pages.odonai?.content?.description || 'OdonAI represents our commitment to integrating artificial intelligence and machine learning technologies into virology and immunology research. We leverage computational approaches to accelerate discovery and enhance our understanding of complex biological systems.'}
                 </p>
               </div>
 
@@ -438,6 +662,14 @@ const App = () => {
               <p className="text-xl text-blue-100 max-w-3xl mx-auto">
                 Get in touch with the Odon Lab team
               </p>
+              {isAdmin && (
+                <button
+                  onClick={() => setEditingPage('contact')}
+                  className="mt-6 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                >
+                  Edit Contact Page
+                </button>
+              )}
             </div>
 
             <div className="max-w-6xl mx-auto">
@@ -457,7 +689,7 @@ const App = () => {
                       <div>
                         <p className="text-white font-semibold">Position:</p>
                         <p className="text-blue-100">Lecturer in Immunology</p>
-                        <p className="text-blue-100">Strathclyde Institute of Pharmacy and Biomedical Sciences</p>
+                        <p className="text-blue-100">{pages.contact?.content?.department || 'Strathclyde Institute of Pharmacy and Biomedical Sciences'}</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-4">
@@ -468,7 +700,7 @@ const App = () => {
                       </div>
                       <div>
                         <p className="text-white font-semibold">Institution:</p>
-                        <p className="text-blue-100">University of Strathclyde</p>
+                        <p className="text-blue-100">{pages.contact?.content?.institution || 'University of Strathclyde'}</p>
                         <p className="text-blue-100">Glasgow, Scotland, UK</p>
                       </div>
                     </div>
@@ -480,8 +712,11 @@ const App = () => {
                       </div>
                       <div>
                         <p className="text-white font-semibold">Email:</p>
-                        <a href="mailto:valerie.odon@strath.ac.uk" className="text-blue-400 hover:text-blue-300 transition-colors">
-                          valerie.odon@strath.ac.uk
+                        <a 
+                          href={`mailto:${pages.contact?.content?.contact_email || 'valerie.odon@strath.ac.uk'}`}
+                          className="text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                          {pages.contact?.content?.contact_email || 'valerie.odon@strath.ac.uk'}
                         </a>
                       </div>
                     </div>
@@ -504,8 +739,7 @@ const App = () => {
                         <p className="text-white font-semibold">Address:</p>
                         <p className="text-blue-100">Strathclyde Institute of Pharmacy and Biomedical Sciences</p>
                         <p className="text-blue-100">University of Strathclyde</p>
-                        <p className="text-blue-100">161 Cathedral Street</p>
-                        <p className="text-blue-100">Glasgow G4 0RE, Scotland, UK</p>
+                        <p className="text-blue-100">{pages.contact?.content?.address || '161 Cathedral Street, Glasgow G4 0RE, Scotland, UK'}</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-4">
@@ -516,8 +750,11 @@ const App = () => {
                       </div>
                       <div>
                         <p className="text-white font-semibold">Phone:</p>
-                        <a href="tel:+441415482000" className="text-blue-400 hover:text-blue-300 transition-colors">
-                          +44 (0)141 548 2000
+                        <a 
+                          href={`tel:${pages.contact?.content?.contact_phone || '+441415482000'}`}
+                          className="text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                          {pages.contact?.content?.contact_phone || '+44 (0)141 548 2000'}
                         </a>
                       </div>
                     </div>
@@ -611,18 +848,348 @@ const App = () => {
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
               </div>
-              <span className="text-xl font-bold text-white">Odon Lab</span>
+              <span className="text-xl font-bold text-white">{settings.site_name || 'Odon Lab'}</span>
             </div>
             <p className="text-blue-100 mb-2">
-              © 2024 Odon Lab - University of Strathclyde. All rights reserved.
+              © 2024 {settings.site_name || 'Odon Lab'} - University of Strathclyde. All rights reserved.
             </p>
             <p className="text-blue-300">
-              Advancing virology and immunology research for a healthier future.
+              {settings.site_description || 'Advancing virology and immunology research for a healthier future.'}
             </p>
           </div>
         </div>
       </footer>
+
+      {/* Login Modal */}
+      {isLoginOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 p-8 rounded-2xl border border-blue-500/20 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">Admin Login</h2>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-white font-semibold mb-2">Username</label>
+                <input
+                  type="text"
+                  value={loginForm.username}
+                  onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
+                  className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-white font-semibold mb-2">Password</label>
+                <input
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                  className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
+              <div className="flex space-x-4">
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Login
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsLoginOpen(false)}
+                  className="flex-1 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Simple Admin Panel Modal */}
+      {isAdminPanelOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 p-8 rounded-2xl border border-blue-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Admin Panel</h2>
+              <button
+                onClick={() => setIsAdminPanelOpen(false)}
+                className="text-white hover:text-red-400 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-6">
+              <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-blue-500/20">
+                <h3 className="text-xl font-semibold text-white mb-4">Quick Actions</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <button
+                    onClick={() => setEditingPage('home')}
+                    className="p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg text-white hover:bg-blue-500/30 transition-colors"
+                  >
+                    Edit Home
+                  </button>
+                  <button
+                    onClick={() => setEditingPage('odonai')}
+                    className="p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg text-white hover:bg-blue-500/30 transition-colors"
+                  >
+                    Edit OdonAI
+                  </button>
+                  <button
+                    onClick={() => setEditingPage('contact')}
+                    className="p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg text-white hover:bg-blue-500/30 transition-colors"
+                  >
+                    Edit Contact
+                  </button>
+                  <button
+                    onClick={() => setEditingProject('new')}
+                    className="p-4 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-white hover:bg-emerald-500/30 transition-colors"
+                  >
+                    Add Project
+                  </button>
+                </div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-blue-500/20">
+                <h3 className="text-xl font-semibold text-white mb-4">Content Overview</h3>
+                <div className="space-y-2 text-blue-100">
+                  <p>• Pages: {Object.keys(pages).length}</p>
+                  <p>• Projects: {projects.length}</p>
+                  <p>• Admin User: {user?.username}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Edit Page Modal */}
+      {editingPage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 p-8 rounded-2xl border border-blue-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Edit {editingPage} Page</h2>
+              <button
+                onClick={() => setEditingPage(null)}
+                className="text-white hover:text-red-400 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-white font-semibold mb-2">Title</label>
+                <input
+                  type="text"
+                  value={pages[editingPage]?.title || ''}
+                  onChange={(e) => {
+                    const updatedPages = {...pages};
+                    updatedPages[editingPage] = {
+                      ...updatedPages[editingPage],
+                      title: e.target.value
+                    };
+                    setPages(updatedPages);
+                  }}
+                  className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:border-blue-400 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-white font-semibold mb-2">Subtitle</label>
+                <input
+                  type="text"
+                  value={pages[editingPage]?.subtitle || ''}
+                  onChange={(e) => {
+                    const updatedPages = {...pages};
+                    updatedPages[editingPage] = {
+                      ...updatedPages[editingPage],
+                      subtitle: e.target.value
+                    };
+                    setPages(updatedPages);
+                  }}
+                  className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:border-blue-400 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-white font-semibold mb-2">Content (JSON)</label>
+                <textarea
+                  value={JSON.stringify(pages[editingPage]?.content || {}, null, 2)}
+                  onChange={(e) => {
+                    try {
+                      const content = JSON.parse(e.target.value);
+                      const updatedPages = {...pages};
+                      updatedPages[editingPage] = {
+                        ...updatedPages[editingPage],
+                        content: content
+                      };
+                      setPages(updatedPages);
+                    } catch (error) {
+                      // Invalid JSON, don't update
+                    }
+                  }}
+                  rows={15}
+                  className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:border-blue-400 transition-all resize-none font-mono text-sm"
+                />
+              </div>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => updatePage(editingPage, {
+                    title: pages[editingPage]?.title,
+                    subtitle: pages[editingPage]?.subtitle,
+                    content: pages[editingPage]?.content
+                  })}
+                  className="flex-1 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={() => setEditingPage(null)}
+                  className="flex-1 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Project Modal */}
+      {editingProject && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 p-8 rounded-2xl border border-blue-500/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">
+                {editingProject === 'new' ? 'Add New Project' : 'Edit Project'}
+              </h2>
+              <button
+                onClick={() => setEditingProject(null)}
+                className="text-white hover:text-red-400 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <EditProjectForm
+              project={editingProject === 'new' ? {} : projects.find(p => p.id === editingProject)}
+              onSave={editingProject === 'new' ? addProject : updateProject}
+              onCancel={() => setEditingProject(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
+  );
+};
+
+// Edit Project Form Component
+const EditProjectForm = ({ project, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    title: project?.title || '',
+    description: project?.description || '',
+    key_areas: project?.key_areas || '',
+    icon: project?.icon || '🔬',
+    order: project?.order || 0,
+    is_published: project?.is_published !== undefined ? project.is_published : true
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (project?.id) {
+      onSave(project.id, formData);
+    } else {
+      onSave(formData);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-white font-semibold mb-2">Title</label>
+        <input
+          type="text"
+          value={formData.title}
+          onChange={(e) => setFormData({...formData, title: e.target.value})}
+          className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:border-blue-400 transition-all"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-white font-semibold mb-2">Description</label>
+        <textarea
+          value={formData.description}
+          onChange={(e) => setFormData({...formData, description: e.target.value})}
+          rows={4}
+          className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:border-blue-400 transition-all resize-none"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-white font-semibold mb-2">Key Areas</label>
+        <input
+          type="text"
+          value={formData.key_areas}
+          onChange={(e) => setFormData({...formData, key_areas: e.target.value})}
+          className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:border-blue-400 transition-all"
+          required
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-white font-semibold mb-2">Icon (Emoji)</label>
+          <input
+            type="text"
+            value={formData.icon}
+            onChange={(e) => setFormData({...formData, icon: e.target.value})}
+            className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:border-blue-400 transition-all"
+            placeholder="🔬"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-white font-semibold mb-2">Order</label>
+          <input
+            type="number"
+            value={formData.order}
+            onChange={(e) => setFormData({...formData, order: parseInt(e.target.value)})}
+            className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:border-blue-400 transition-all"
+            min="0"
+          />
+        </div>
+      </div>
+      <div>
+        <label className="flex items-center space-x-2 text-white">
+          <input
+            type="checkbox"
+            checked={formData.is_published}
+            onChange={(e) => setFormData({...formData, is_published: e.target.checked})}
+            className="w-4 h-4 text-blue-600 bg-white/5 border-blue-500/30 rounded focus:ring-blue-500"
+          />
+          <span>Published</span>
+        </label>
+      </div>
+      <div className="flex space-x-4">
+        <button
+          type="submit"
+          className="flex-1 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          Save Project
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 };
 
