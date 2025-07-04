@@ -241,9 +241,9 @@ const Navigation = ({ pages, isAdmin, user, onLogin, onLogout, onOpenAdminPanel 
 
 // Page Layout Component
 const PageLayout = ({ children, className = "" }) => (
-  <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 pt-20 ${className}`}>
+  <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 pt-20 ${className}`}>
     {children}
-    <footer className="bg-slate-900 py-12 border-t border-blue-500/20">
+    <footer className="bg-slate-800 py-12 border-t border-blue-300/30">
       <div className="container mx-auto px-6">
         <div className="text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
