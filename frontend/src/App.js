@@ -300,21 +300,21 @@ const HomePage = ({ page, projects, isAdmin, onEditPage, onEditProject, onDelete
           <img 
             src={page.content?.hero_image || "https://images.pexels.com/photos/8532850/pexels-photo-8532850.jpeg"} 
             alt="Laboratory Research"
-            className="w-full h-full object-cover opacity-30"
+            className="w-full h-full object-cover opacity-20"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-blue-900/70 to-indigo-900/80"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/90 via-blue-100/80 to-blue-200/90"></div>
         </div>
         
         <div className="container mx-auto px-6 py-20 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="mb-8">
-              <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+              <h1 className="text-5xl md:text-7xl font-bold text-slate-800 mb-6 leading-tight">
                 {page.title || 'Welcome to'} 
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 block">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800 block">
                   Odon Lab
                 </span>
               </h1>
-              <p className="text-xl md:text-2xl text-blue-100 mb-8 leading-relaxed">
+              <p className="text-xl md:text-2xl text-slate-700 mb-8 leading-relaxed">
                 {page.subtitle || 'Advancing virology and immunology research at the University of Strathclyde'}
               </p>
               {isAdmin && (
@@ -329,26 +329,48 @@ const HomePage = ({ page, projects, isAdmin, onEditPage, onEditProject, onDelete
 
             {/* Research Cards */}
             <div className="grid md:grid-cols-2 gap-8 mb-12">
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:transform hover:scale-105">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mb-6 mx-auto">
+              <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 border border-blue-300/30 hover:border-blue-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg">
+                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mb-6 mx-auto">
+                  {/* DNA/Molecular Icon */}
                   <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    <g>
+                      {/* Central molecule */}
+                      <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                      {/* Surrounding molecules */}
+                      <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
+                      <circle cx="16" cy="8" r="1.5" fill="currentColor"/>
+                      <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
+                      <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
+                      <circle cx="4" cy="12" r="1.5" fill="currentColor"/>
+                      <circle cx="20" cy="12" r="1.5" fill="currentColor"/>
+                      <circle cx="12" cy="4" r="1.5" fill="currentColor"/>
+                      <circle cx="12" cy="20" r="1.5" fill="currentColor"/>
+                      {/* Bonds */}
+                      <line x1="12" y1="12" x2="8" y2="8" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="16" y2="8" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="8" y2="16" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="16" y2="16" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="4" y2="12" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="12" y2="4" stroke="currentColor" strokeWidth="1"/>
+                      <line x1="12" y1="12" x2="12" y2="20" stroke="currentColor" strokeWidth="1"/>
+                    </g>
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-4">Our Research</h3>
-                <p className="text-blue-100 leading-relaxed">
+                <h3 className="text-2xl font-bold text-slate-800 mb-4">Our Research</h3>
+                <p className="text-slate-700 leading-relaxed">
                   {page.content?.research_description || 'We focus on cutting-edge virology research, exploring virus-host interactions, immune responses, and developing innovative therapeutic approaches.'}
                 </p>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:transform hover:scale-105">
-                <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-6 mx-auto">
+              <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 border border-blue-300/30 hover:border-blue-400/50 transition-all duration-300 hover:transform hover:scale-105 shadow-lg">
+                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-6 mx-auto">
                   <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 16l-5 2.72L7 16v-3.73L12 15l5-2.73V16z"/>
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-4">Education & Training</h3>
-                <p className="text-blue-100 leading-relaxed">
+                <h3 className="text-2xl font-bold text-slate-800 mb-4">Education & Training</h3>
+                <p className="text-slate-700 leading-relaxed">
                   {page.content?.education_description || 'Training the next generation of researchers and healthcare professionals in immunology and virology.'}
                 </p>
               </div>
