@@ -541,7 +541,7 @@ const ProjectsPage = ({ page, projects, isAdmin, onEditPage, onEditProject, onDe
 
 // Generic Page Component (for OdonAI, Contact, and custom pages)
 const GenericPage = ({ page, isAdmin, onEditPage }) => {
-  if (!page) return <PageLayout><div className="flex items-center justify-center min-h-screen"><div className="text-white text-xl">Page not found</div></div></PageLayout>;
+  if (!page) return <PageLayout><div className="flex items-center justify-center min-h-screen"><div className="text-slate-800 text-xl">Page not found</div></div></PageLayout>;
 
   return (
     <PageLayout>
@@ -553,16 +553,16 @@ const GenericPage = ({ page, isAdmin, onEditPage }) => {
               alt={page.title}
               className="w-full h-full object-cover opacity-20"
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-blue-900/85 to-indigo-900/90"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/90 via-blue-100/85 to-blue-200/90"></div>
           </div>
         )}
         
         <div className="container mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-6">
               {page.title}
             </h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl text-slate-700 max-w-3xl mx-auto">
               {page.subtitle}
             </p>
             {isAdmin && (
@@ -584,21 +584,21 @@ const GenericPage = ({ page, isAdmin, onEditPage }) => {
               
               if (typeof content === 'string') {
                 return (
-                  <div key={key} className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20 mb-8">
-                    <h3 className="text-2xl font-bold text-white mb-4 capitalize">{key.replace(/_/g, ' ')}</h3>
-                    <p className="text-blue-100 text-lg leading-relaxed">{content}</p>
+                  <div key={key} className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 border border-blue-300/30 mb-8 shadow-lg">
+                    <h3 className="text-2xl font-bold text-slate-800 mb-4 capitalize">{key.replace(/_/g, ' ')}</h3>
+                    <p className="text-slate-700 text-lg leading-relaxed">{content}</p>
                   </div>
                 );
               }
               
               if (Array.isArray(content)) {
                 return (
-                  <div key={key} className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20 mb-8">
-                    <h3 className="text-2xl font-bold text-white mb-4 capitalize">{key.replace(/_/g, ' ')}</h3>
-                    <ul className="space-y-2 text-blue-100">
+                  <div key={key} className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 border border-blue-300/30 mb-8 shadow-lg">
+                    <h3 className="text-2xl font-bold text-slate-800 mb-4 capitalize">{key.replace(/_/g, ' ')}</h3>
+                    <ul className="space-y-2 text-slate-700">
                       {content.map((item, index) => (
                         <li key={index} className="flex items-start">
-                          <span className="w-2 h-2 bg-blue-400 rounded-full mr-3 mt-2"></span>
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2"></span>
                           {item}
                         </li>
                       ))}
@@ -609,13 +609,13 @@ const GenericPage = ({ page, isAdmin, onEditPage }) => {
               
               if (typeof content === 'object') {
                 return (
-                  <div key={key} className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20 mb-8">
-                    <h3 className="text-2xl font-bold text-white mb-4 capitalize">{key.replace(/_/g, ' ')}</h3>
+                  <div key={key} className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 border border-blue-300/30 mb-8 shadow-lg">
+                    <h3 className="text-2xl font-bold text-slate-800 mb-4 capitalize">{key.replace(/_/g, ' ')}</h3>
                     <div className="grid md:grid-cols-2 gap-6">
                       {Object.entries(content).map(([subkey, subcontent]) => (
-                        <div key={subkey} className="bg-blue-500/20 rounded-xl p-6 border border-blue-500/30">
-                          <h4 className="text-lg font-semibold text-white mb-3 capitalize">{subkey.replace(/_/g, ' ')}</h4>
-                          <p className="text-blue-100 text-sm">{typeof subcontent === 'string' ? subcontent : JSON.stringify(subcontent)}</p>
+                        <div key={subkey} className="bg-blue-50/80 rounded-xl p-6 border border-blue-300/40">
+                          <h4 className="text-lg font-semibold text-slate-800 mb-3 capitalize">{subkey.replace(/_/g, ' ')}</h4>
+                          <p className="text-slate-700 text-sm">{typeof subcontent === 'string' ? subcontent : JSON.stringify(subcontent)}</p>
                         </div>
                       ))}
                     </div>
@@ -628,10 +628,10 @@ const GenericPage = ({ page, isAdmin, onEditPage }) => {
 
             {/* Default content if no content exists */}
             {(!page.content || Object.keys(page.content).length === 0) && (
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20 text-center">
+              <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 border border-blue-300/30 text-center shadow-lg">
                 <div className="text-6xl mb-4">📄</div>
-                <h3 className="text-2xl font-bold text-white mb-4">Page Content</h3>
-                <p className="text-blue-100">This page is ready for content. Use the admin panel to add content.</p>
+                <h3 className="text-2xl font-bold text-slate-800 mb-4">Page Content</h3>
+                <p className="text-slate-700">This page is ready for content. Use the admin panel to add content.</p>
               </div>
             )}
           </div>
