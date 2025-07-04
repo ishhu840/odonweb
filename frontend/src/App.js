@@ -377,16 +377,16 @@ const HomePage = ({ page, projects, isAdmin, onEditPage, onEditProject, onDelete
             </div>
 
             {/* About Dr. Odon */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20 mb-12">
-              <h2 className="text-3xl font-bold text-white mb-6">About Dr. Valerie Odon</h2>
+            <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 border border-blue-300/30 mb-12 shadow-lg">
+              <h2 className="text-3xl font-bold text-slate-800 mb-6">About Dr. Valerie Odon</h2>
               <div className="text-left max-w-4xl mx-auto">
-                <p className="text-blue-100 text-lg leading-relaxed mb-6">
+                <p className="text-slate-700 text-lg leading-relaxed mb-6">
                   {page.content?.about_dr_odon || 'Dr. Valerie Odon is a distinguished virologist and lecturer in Immunology at the Strathclyde Institute of Pharmacy and Biomedical Sciences, University of Strathclyde.'}
                 </p>
                 <div className="grid md:grid-cols-2 gap-8">
                   <div>
-                    <h4 className="text-xl font-semibold text-white mb-4">Research Interests:</h4>
-                    <ul className="space-y-2 text-blue-100">
+                    <h4 className="text-xl font-semibold text-slate-800 mb-4">Research Interests:</h4>
+                    <ul className="space-y-2 text-slate-700">
                       {(page.content?.research_interests || [
                         'Virus-host cell interactions',
                         'Innate and adaptive immune responses',
@@ -395,16 +395,16 @@ const HomePage = ({ page, projects, isAdmin, onEditPage, onEditProject, onDelete
                         'Vaccine development and immunology'
                       ]).map((interest, index) => (
                         <li key={index} className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
                           {interest}
                         </li>
                       ))}
                     </ul>
                   </div>
                   <div>
-                    <h4 className="text-xl font-semibold text-white mb-4">Affiliation:</h4>
-                    <div className="text-blue-100 space-y-2">
-                      <p><strong className="text-white">University of Strathclyde</strong></p>
+                    <h4 className="text-xl font-semibold text-slate-800 mb-4">Affiliation:</h4>
+                    <div className="text-slate-700 space-y-2">
+                      <p><strong className="text-slate-800">University of Strathclyde</strong></p>
                       <p>Strathclyde Institute of Pharmacy and Biomedical Sciences</p>
                       <p>Department of Immunology</p>
                     </div>
@@ -415,16 +415,16 @@ const HomePage = ({ page, projects, isAdmin, onEditPage, onEditProject, onDelete
 
             {/* Featured Projects Preview */}
             {projects.length > 0 && (
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/20">
-                <h2 className="text-3xl font-bold text-white mb-6">Featured Research</h2>
+              <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 border border-blue-300/30 shadow-lg">
+                <h2 className="text-3xl font-bold text-slate-800 mb-6">Featured Research</h2>
                 <div className="grid md:grid-cols-2 gap-6">
                   {projects.slice(0, 2).map((project) => (
-                    <div key={project.id} className="bg-blue-500/20 rounded-xl p-6 border border-blue-500/30">
-                      <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
+                    <div key={project.id} className="bg-blue-50/80 rounded-xl p-6 border border-blue-300/40">
+                      <h3 className="text-xl font-semibold text-slate-800 mb-3 flex items-center">
                         <span className="text-2xl mr-3">{project.icon}</span>
                         {project.title}
                       </h3>
-                      <p className="text-blue-100 text-sm">{project.description.substring(0, 150)}...</p>
+                      <p className="text-slate-700 text-sm">{project.description.substring(0, 150)}...</p>
                     </div>
                   ))}
                 </div>
