@@ -62,7 +62,7 @@ class PageContent(BaseModel):
     page_name: str
     title: str
     subtitle: Optional[str] = None
-    content: Dict[str, Any]
+    content: Dict[str, Any] = Field(default_factory=dict)
     meta_description: Optional[str] = None
     meta_keywords: Optional[str] = None
     is_published: bool = True
@@ -73,7 +73,7 @@ class PageContentCreate(BaseModel):
     page_name: str
     title: str
     subtitle: Optional[str] = None
-    content: Dict[str, Any]
+    content: Dict[str, Any] = Field(default_factory=dict)
     meta_description: Optional[str] = None
     meta_keywords: Optional[str] = None
     is_published: bool = True
@@ -248,6 +248,11 @@ async def get_pages():
     pages = await db.pages.find().to_list(1000)
     return [PageContent(**page) for page in pages]
 
+@api_router.get("/pages/published", response_model=List[PageContent])
+async def get_published_pages():
+    pages = await db.pages.find({"is_published": True}).to_list(1000)
+    return [PageContent(**page) for page in pages]
+
 @api_router.get("/pages/{page_name}", response_model=PageContent)
 async def get_page(page_name: str):
     page = await db.pages.find_one({"page_name": page_name})
@@ -257,6 +262,14 @@ async def get_page(page_name: str):
 
 @api_router.post("/pages", response_model=PageContent)
 async def create_page(page: PageContentCreate, current_user: User = Depends(get_current_admin_user)):
+    # Check if page name already exists
+    existing_page = await db.pages.find_one({"page_name": page.page_name})
+    if existing_page:
+        raise HTTPException(
+            status_code=400,
+            detail="Page with this name already exists"
+        )
+    
     page_dict = page.dict()
     page_obj = PageContent(**page_dict)
     await db.pages.insert_one(page_obj.dict())
@@ -277,15 +290,42 @@ async def update_page(page_name: str, page_update: PageContentUpdate, current_us
 
 @api_router.delete("/pages/{page_name}")
 async def delete_page(page_name: str, current_user: User = Depends(get_current_admin_user)):
+    # Prevent deletion of home page
+    if page_name == "home":
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete home page"
+        )
+    
     result = await db.pages.delete_one({"page_name": page_name})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Page not found")
     return {"message": "Page deleted successfully"}
 
+@api_router.patch("/pages/{page_name}/toggle-status")
+async def toggle_page_status(page_name: str, current_user: User = Depends(get_current_admin_user)):
+    page = await db.pages.find_one({"page_name": page_name})
+    if not page:
+        raise HTTPException(status_code=404, detail="Page not found")
+    
+    new_status = not page["is_published"]
+    await db.pages.update_one(
+        {"page_name": page_name}, 
+        {"$set": {"is_published": new_status, "updated_at": datetime.utcnow()}}
+    )
+    
+    updated_page = await db.pages.find_one({"page_name": page_name})
+    return PageContent(**updated_page)
+
 # Project Routes
 @api_router.get("/projects", response_model=List[Project])
 async def get_projects():
     projects = await db.projects.find().sort("order", 1).to_list(1000)
+    return [Project(**project) for project in projects]
+
+@api_router.get("/projects/published", response_model=List[Project])
+async def get_published_projects():
+    projects = await db.projects.find({"is_published": True}).sort("order", 1).to_list(1000)
     return [Project(**project) for project in projects]
 
 @api_router.get("/projects/{project_id}", response_model=Project)
@@ -321,6 +361,21 @@ async def delete_project(project_id: str, current_user: User = Depends(get_curre
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
     return {"message": "Project deleted successfully"}
+
+@api_router.patch("/projects/{project_id}/toggle-status")
+async def toggle_project_status(project_id: str, current_user: User = Depends(get_current_admin_user)):
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    new_status = not project["is_published"]
+    await db.projects.update_one(
+        {"id": project_id}, 
+        {"$set": {"is_published": new_status, "updated_at": datetime.utcnow()}}
+    )
+    
+    updated_project = await db.projects.find_one({"id": project_id})
+    return Project(**updated_project)
 
 # Site Settings Routes
 @api_router.get("/settings", response_model=SiteSettings)
@@ -403,6 +458,24 @@ async def delete_media(media_id: str, current_user: User = Depends(get_current_a
         raise HTTPException(status_code=404, detail="Media file not found")
     return {"message": "Media file deleted successfully"}
 
+# Analytics and Dashboard Routes
+@api_router.get("/dashboard/stats")
+async def get_dashboard_stats(current_user: User = Depends(get_current_admin_user)):
+    total_pages = await db.pages.count_documents({})
+    published_pages = await db.pages.count_documents({"is_published": True})
+    total_projects = await db.projects.count_documents({})
+    published_projects = await db.projects.count_documents({"is_published": True})
+    total_media = await db.media.count_documents({})
+    
+    return {
+        "total_pages": total_pages,
+        "published_pages": published_pages,
+        "total_projects": total_projects,
+        "published_projects": published_projects,
+        "total_media": total_media,
+        "last_updated": datetime.utcnow()
+    }
+
 # Initialize sample data
 async def init_sample_data():
     # Check if sample data already exists
@@ -427,20 +500,40 @@ async def init_sample_data():
                     "Viral pathogenesis mechanisms",
                     "Antiviral therapeutics development",
                     "Vaccine development and immunology"
-                ]
+                ],
+                "research_description": "We focus on cutting-edge virology research, exploring virus-host interactions, immune responses, and developing innovative therapeutic approaches.",
+                "education_description": "Training the next generation of researchers and healthcare professionals in immunology and virology."
             },
             meta_description="Dr. Valerie Odon's Virology Research Lab at the University of Strathclyde - Advancing immunology and virus research",
             meta_keywords="virology, immunology, research, University of Strathclyde, Dr. Valerie Odon"
+        ),
+        PageContent(
+            page_name="projects",
+            title="Research Projects",
+            subtitle="Exploring the frontiers of virology and immunology through innovative research initiatives",
+            content={
+                "collaborations_text": "We actively collaborate with leading research institutions, pharmaceutical companies, and healthcare organizations worldwide to advance our research goals and translate discoveries into clinical applications."
+            }
         ),
         PageContent(
             page_name="odonai",
             title="OdonAI",
             subtitle="Artificial Intelligence Applications in Virology and Immunology Research",
             content={
-                "title": "OdonAI",
-                "subtitle": "Artificial Intelligence Applications in Virology and Immunology Research",
                 "description": "OdonAI represents our commitment to integrating artificial intelligence and machine learning technologies into virology and immunology research. We leverage computational approaches to accelerate discovery and enhance our understanding of complex biological systems.",
-                "ai_image": "https://images.unsplash.com/photo-1655393001768-d946c97d6fd1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzd8MHwxfHNlYXJjaHwxfHxBSSUyMHRlY2hub2xvZ3l8ZW58MHx8fGJsdWV8MTc1MTYyMjk0NHww&ixlib=rb-4.1.0&q=85"
+                "background_image": "https://images.unsplash.com/photo-1655393001768-d946c97d6fd1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzd8MHwxfHNlYXJjaHwxfHxBSSUyMHRlY2hub2xvZ3l8ZW58MHx8fGJsdWV8MTc1MTYyMjk0NHww&ixlib=rb-4.1.0&q=85",
+                "machine_learning_applications": [
+                    "Viral sequence analysis and classification",
+                    "Prediction of viral mutations and evolution",
+                    "Drug target identification and optimization",
+                    "Biomarker discovery for immune responses"
+                ],
+                "data_analytics": [
+                    "High-throughput screening data analysis",
+                    "Genomic and proteomic data integration",
+                    "Clinical trial data modeling",
+                    "Epidemiological pattern recognition"
+                ]
             }
         ),
         PageContent(
